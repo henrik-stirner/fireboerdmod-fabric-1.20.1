@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "fireboerdmod",
+	"version": "${version}",
+	"name": "Fireboerd Mod",
+	"description": "adds a new boss to the game",
+	"authors": [
+		"Henrik Stirner"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/fireboerdmod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+          "net.henrik.fireboerdmod.FireboerdMod"
+		],
+		"client": [
+          "net.henrik.fireboerdmod.FireboerdModClient"
+		],
+		"fabric-datagen": [
+			"net.henrik.fireboerdmod.FireboerdModDataGenerator"
+		]
+	},
+	"mixins": [
+		"fireboerdmod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
