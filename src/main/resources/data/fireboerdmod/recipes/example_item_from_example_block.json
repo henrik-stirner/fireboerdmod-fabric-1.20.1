@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    {
+      "item": "fireboerdmod:example_block"
+    }
+  ],
+  "result": {
+    "item": "fireboerdmod:example_item",
+    "count": 9
+  }
+}

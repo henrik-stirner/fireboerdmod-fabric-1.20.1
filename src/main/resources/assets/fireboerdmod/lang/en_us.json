@@ -1,0 +1,12 @@
+{
+  "itemgroup.fireboerdmod.example_group": "Example Group",
+  "itemgroup.fireboerdmod.fiery_group": "Fiery Stuff",
+
+  "block.fireboerdmod.example_block": "Example Block",
+
+  "item.fireboerdmod.example_item": "Example Item",
+  "item.fireboerdmod.errant_fire": "Errant Fire",
+
+  "entity.fireboerdmod.errant_fire": "Errant Fire",
+  "entity.fireboerdmod.fireboerd": "Fireboerd"
+}
