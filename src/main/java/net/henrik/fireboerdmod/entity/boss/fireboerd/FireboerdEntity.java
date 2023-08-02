@@ -3,20 +3,29 @@ package net.henrik.fireboerdmod.entity.boss.fireboerd;
 import net.henrik.fireboerdmod.entity.boss.BossEntity;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseManager;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseType;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.control.FlightMoveControl;
+import net.minecraft.entity.ai.control.MoveControl;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.SwimGoal;
+import net.minecraft.entity.ai.pathing.BirdNavigation;
+import net.minecraft.entity.ai.pathing.EntityNavigation;
+import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.Monster;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.world.Difficulty;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -26,12 +35,16 @@ import software.bernie.geckolib.core.animatable.instance.SingletonAnimatableInst
 import software.bernie.geckolib.core.animation.*;
 import software.bernie.geckolib.core.object.PlayState;
 
+import java.util.Random;
+
 public class FireboerdEntity extends BossEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
 
     // boss-specific
     private static final BossBar.Color BOSS_BAR_COLOR = BossBar.Color.RED;
     private static final double MAX_HEALTH = 900.0D;
+
+    private static final int EXPERIENCE_POINTS = 100;
 
     // phases
     public static final TrackedData<Integer> PHASE_TYPE = DataTracker.registerData(FireboerdEntity.class,
@@ -42,9 +55,17 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
 
     public FireboerdEntity(EntityType<? extends FireboerdEntity> entityType, World world) {
         super(entityType, world, BOSS_BAR_COLOR);
-
         this.phaseManager = new PhaseManager(this);
+        this.experiencePoints = EXPERIENCE_POINTS;
+
+        this.setPathfindingPenalty(PathNodeType.WATER, -1.0f);
+        this.setPathfindingPenalty(PathNodeType.LAVA, 8.0f);
+        this.setPathfindingPenalty(PathNodeType.DANGER_FIRE, 0.0f);
+        this.setPathfindingPenalty(PathNodeType.DAMAGE_FIRE, 0.0f);
     }
+
+    // random
+    public Random random = new Random();
 
     // ====================================================================================================
     // defaults
@@ -53,21 +74,69 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, MAX_HEALTH)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0f)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 16.0f)
                 .add(EntityAttributes.GENERIC_ATTACK_SPEED, 1.5f)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.6f)
                 .add(EntityAttributes.GENERIC_FLYING_SPEED, 0.9f);
     }
 
-    /**
+    @Override
+    protected void fall(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition) {
+    }
+
+    @Override
+    public boolean isFireImmune() { return true; }
+
+    @Override
+    public boolean hurtByWater() {
+        return true;
+    }
+
+    // ====================================================================================================
+    // move control
+    // ====================================================================================================
+
+    public void setMoveControl(MoveControl newMoveControl) {
+        this.moveControl = newMoveControl;
+    }
+
+    // ====================================================================================================
+    // goals
+    // ====================================================================================================
+
+    public void addGoal(int priority, Goal goal) {
+        this.goalSelector.add(priority, goal);
+    }
+
+    public void removeGoal(Goal goal) {
+        this.goalSelector.remove(goal);
+    }
+
+    public void addTargetGoal(int priority, Goal goal) {
+        this.targetSelector.add(priority, goal);
+    }
+
+    public void removeTargetGoal(Goal goal) {
+        this.targetSelector.remove(goal);
+    }
+
+    public void initAlwaysActiveGoals() {
+        this.goalSelector.add(1, new SwimGoal(this));
+        this.targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+    }
+
     @Override
     protected void initGoals() {
+        this.initAlwaysActiveGoals();
+    }
+
+    /**
         this.goalSelector.add(1, new SwimGoal(this));
 
         this.goalSelector.add(2, new MeleeAttackGoal(this, 1.2D, false));
         // ChargeTargetGoal
 
-        // FireBeamGoal
+        // ProjectileAttackGoal
         // ShootBulletGoal
         // ShootFireballGoal (Ghast / Blaze)
 
@@ -79,10 +148,7 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
 
         // SitGoal
         this.goalSelector.add(4, new LookAroundGoal(this));
-
-        this.targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
-    }
-    */
+     */
 
     // ====================================================================================================
     // animations
@@ -113,8 +179,23 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     // ====================================================================================================
 
     @Override
+    protected EntityNavigation createNavigation(World world) {
+        BirdNavigation birdNavigation = new BirdNavigation(this, world);
+        birdNavigation.setCanPathThroughDoors(false);
+        birdNavigation.setCanSwim(true);
+        birdNavigation.setCanEnterOpenDoors(true);
+        return birdNavigation;
+    }
+
+    @Override
     public void tickMovement() {
         super.tickMovement();
+
+        if (this.getWorld().isClient()) {
+            this.phaseManager.getCurrentPhase().clientTick();
+        } else {
+            this.phaseManager.getCurrentPhase().serverTick();
+        }
     }
 
     @Override
@@ -148,5 +229,45 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
 
     public PhaseManager getPhaseManager() {
         return this.phaseManager;
+    }
+
+    // ====================================================================================================
+    // defaults
+    // ====================================================================================================
+
+    @Override
+    public boolean canTarget(LivingEntity target) {
+        return target.canTakeDamage();
+    }
+
+    @Override
+    protected boolean canStartRiding(Entity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean canUsePortals() {
+        return false;
+    }
+
+    // ====================================================================================================
+    // utility
+    // ====================================================================================================
+
+    @Nullable
+    public Vec3d getPointAroundPlayer() {
+        if (this.getTarget() == null) {
+            return null;
+        }
+
+        double offset = this.random.nextDouble() * (4 - 2) + 2;
+        double theta = this.random.nextDouble() * 359;
+        double phi = this.random.nextDouble() * 359;
+
+        double x = offset * Math.sin(theta) * Math.cos(phi);
+        double y = offset * Math.sin(theta) * Math.sin(phi);
+        double z = offset * Math.cos(theta);
+
+        return this.getTarget().getPos().add(x, y, z);
     }
 }
