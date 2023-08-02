@@ -3,9 +3,11 @@ package net.henrik.fireboerdmod.entity.projectile;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import net.henrik.fireboerdmod.entity.ModEntityTypes;
+import net.minecraft.datafixer.fix.ChunkPalettedStorageFix;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -26,6 +28,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
@@ -55,7 +58,6 @@ public class ErrantFireEntity extends ProjectileEntity {
 
     public ErrantFireEntity(EntityType<? extends ErrantFireEntity> entityType, World world) {
         super(entityType, world);
-        this.noClip = true;
     }
 
     public ErrantFireEntity(World world, LivingEntity owner, @Nullable Entity target, Direction.Axis axis) {
@@ -210,7 +212,10 @@ public class ErrantFireEntity extends ProjectileEntity {
     }
 
     public void updateTarget() {
-        Entity newTarget = this.getWorld().getClosestPlayer(this, playerRadarRange);
+        Entity newTarget = this.getWorld().getClosestPlayer(
+                this.getX(), this.getY(), this.getZ(),
+                playerRadarRange, false
+        );
 
         if (newTarget == null) {
             return;
@@ -304,30 +309,34 @@ public class ErrantFireEntity extends ProjectileEntity {
     protected void onEntityHit(EntityHitResult entityHitResult) {
         super.onEntityHit(entityHitResult);
         Entity entity = entityHitResult.getEntity();
-        Entity entity2 = this.getOwner();
-        LivingEntity livingEntity = entity2 instanceof LivingEntity ? (LivingEntity)entity2 : null;
-        boolean bl = entity.damage(this.getDamageSources().mobProjectile(this, livingEntity), 4.0f);
-        if (bl) {
+        Entity owner = this.getOwner();
+
+        LivingEntity livingEntity = owner instanceof LivingEntity ? (LivingEntity)owner : null;
+
+        boolean damaged = entity.damage(this.getDamageSources().mobProjectile(this, livingEntity), 4.0f);
+        if (damaged) {
             this.applyDamageEffects(livingEntity, entity);
-            if (entity instanceof LivingEntity) {
-                LivingEntity livingEntity2 = (LivingEntity)entity;
-                livingEntity2.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, 200), MoreObjects.firstNonNull(entity2, this));
-            }
         }
+    }
+
+    protected void spawnCollisionParticles() {
+        ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.SMOKE, this.getX(), this.getY(), this.getZ(), 15, 0.2, 0.2, 0.2, 0.0);
+        ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.LAVA, this.getX(), this.getY(), this.getZ(), 5, 0.2, 0.2, 0.2, 0.0);
+        ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.DRIPPING_LAVA, this.getX(), this.getY(), this.getZ(), 10, 0.2, 0.2, 0.2, 0.0);
+    }
+
+    private void destroy() {
+        this.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, 0.5f, 1.0f);
+        this.spawnCollisionParticles();
+
+        this.discard();
+        this.getWorld().emitGameEvent(GameEvent.ENTITY_DAMAGE, this.getPos(), GameEvent.Emitter.of(this));
     }
 
     @Override
     protected void onBlockHit(BlockHitResult blockHitResult) {
         super.onBlockHit(blockHitResult);
-        this.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-        ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY(), this.getZ(), 2, 0.2, 0.2, 0.2, 0.0);
-        ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY(), this.getZ(), 15, 0.2, 0.2, 0.2, 0.0);
-        ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.FLAME, this.getX(), this.getY(), this.getZ(), 15, 0.2, 0.2, 0.2, 0.0);
-    }
-
-    private void destroy() {
-        this.discard();
-        this.getWorld().emitGameEvent(GameEvent.ENTITY_DAMAGE, this.getPos(), GameEvent.Emitter.of(this));
+        this.destroy();
     }
 
     @Override
@@ -344,10 +353,6 @@ public class ErrantFireEntity extends ProjectileEntity {
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (!this.getWorld().isClient) {
-            this.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-            ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.SMOKE, this.getX(), this.getY(), this.getZ(), 15, 0.2, 0.2, 0.2, 0.0);
-            ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.LAVA, this.getX(), this.getY(), this.getZ(), 5, 0.2, 0.2, 0.2, 0.0);
-            ((ServerWorld)this.getWorld()).spawnParticles(ParticleTypes.DRIPPING_LAVA, this.getX(), this.getY(), this.getZ(), 10, 0.2, 0.2, 0.2, 0.0);
             this.destroy();
         }
         return true;

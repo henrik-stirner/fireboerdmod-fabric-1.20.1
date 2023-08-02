@@ -17,6 +17,10 @@ public class ErrantFireItem extends Item {
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        if (world.isClient()) {
+            return TypedActionResult.success(user.getStackInHand(hand), true);
+        }
+
         ErrantFireEntity errantFireEntity = new ErrantFireEntity(
                 world,
                 user,
