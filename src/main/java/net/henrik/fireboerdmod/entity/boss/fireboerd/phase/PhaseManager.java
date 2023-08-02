@@ -3,6 +3,7 @@
  */
 package net.henrik.fireboerdmod.entity.boss.fireboerd.phase;
 
+import net.henrik.fireboerdmod.FireboerdMod;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
 import net.henrik.fireboerdmod.entity.boss.phase.Phase;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +23,7 @@ public class PhaseManager {
         if (this.currentPhase != null && type == this.currentPhase.getType()) {
             return;
         }
+
         if (this.currentPhase != null) {
             this.currentPhase.endPhase();
         }
@@ -30,9 +32,11 @@ public class PhaseManager {
             this.fireboerd.getDataTracker().set(FireboerdEntity.PHASE_TYPE, type.getTypeId());
         }
         this.currentPhase.beginPhase();
+
+        FireboerdMod.LOGGER.info("Beginning new phase of type " + type + " for entity " + this.fireboerd);
     }
 
-    public Phase getCurrentPhase() {
+    public @Nullable Phase getCurrentPhase() {
         return this.currentPhase;
     }
 
