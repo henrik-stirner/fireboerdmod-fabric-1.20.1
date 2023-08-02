@@ -5,7 +5,8 @@ package net.henrik.fireboerdmod.entity.boss.fireboerd.phase;
 
 
 import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
-import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.custom.*;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.custom.DyingPhase;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.custom.SpawningPhase;
 import net.henrik.fireboerdmod.entity.boss.phase.Phase;
 
 import java.lang.reflect.Constructor;
@@ -14,10 +15,6 @@ import java.util.Arrays;
 public class PhaseType<T extends Phase> {
     private static PhaseType<?>[] types = new PhaseType[0];
     public static final PhaseType<SpawningPhase> SPAWNING = PhaseType.register(SpawningPhase.class, "Spawning");
-    public static final PhaseType<AerialPhase> AERIAL = PhaseType.register(AerialPhase.class, "Aerial");
-    public static final PhaseType<ChargeAttackPhase> CHARGE_ATTACK = PhaseType.register(ChargeAttackPhase.class, "ChargeAttack");
-    public static final PhaseType<TerrestrialPhase> TERRESTRIAL = PhaseType.register(TerrestrialPhase.class, "Terrestrial");
-    public static final PhaseType<MeleeAttackPhase> MELEE_ATTACK = PhaseType.register(MeleeAttackPhase.class, "MeleeAttack");
     public static final PhaseType<DyingPhase> DYING = PhaseType.register(DyingPhase.class, "Dying");
     private final Class<? extends Phase> phaseClass;
     private final int id;

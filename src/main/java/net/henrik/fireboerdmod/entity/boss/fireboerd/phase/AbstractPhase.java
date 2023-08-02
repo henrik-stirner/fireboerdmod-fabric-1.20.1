@@ -20,18 +20,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AbstractPhase implements Phase {
     protected final FireboerdEntity fireboerd;
 
-    protected int ticks = 0;
-
     public AbstractPhase(FireboerdEntity fireboerd) {
         this.fireboerd = fireboerd;
-    }
-
-    public void initPhaseMoveControl() {
-    }
-
-    public void initPhaseGoals() {
-        this.fireboerd.clearGoals(goal -> true);
-        this.fireboerd.initAlwaysActiveGoals();
     }
 
     @Override
@@ -40,15 +30,10 @@ public abstract class AbstractPhase implements Phase {
 
     @Override
     public void serverTick() {
-        ++this.ticks;
     }
 
     @Override
     public void beginPhase() {
-        this.ticks = 0;
-
-        this.initPhaseMoveControl();
-        this.initPhaseGoals();
     }
 
     @Override

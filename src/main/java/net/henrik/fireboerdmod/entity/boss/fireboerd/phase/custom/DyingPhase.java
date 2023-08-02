@@ -7,13 +7,7 @@ import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.AbstractPhase;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseType;
 import net.henrik.fireboerdmod.entity.boss.phase.Phase;
-import net.minecraft.entity.ai.control.FlightMoveControl;
-import net.minecraft.entity.ai.control.MoveControl;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.WanderAroundGoal;
-import net.minecraft.entity.ai.goal.WanderNearTargetGoal;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
@@ -23,42 +17,31 @@ public class DyingPhase
 extends AbstractPhase {
     @Nullable
     private Vec3d target;
+    private int ticks;
 
     public DyingPhase(FireboerdEntity fireboerdEntity) {
         super(fireboerdEntity);
     }
 
     @Override
-    public void initPhaseMoveControl() {
-        this.fireboerd.setMoveControl(new MoveControl(this.fireboerd));
-    }
-
-    @Override
-    public void initPhaseGoals() {
-        super.initPhaseGoals();
-
-        this.fireboerd.addGoal(2, new MeleeAttackGoal(this.fireboerd, 0.5d, false));
-        this.fireboerd.addGoal(3, new WanderNearTargetGoal(this.fireboerd, 0.5d, 8));
-        this.fireboerd.addGoal(4, new WanderAroundGoal(this.fireboerd, 0.5d, 25));
+    public void clientTick() {
+        if (this.ticks++ % 10 == 0) {
+            float f = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 8.0f;
+            float g = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 4.0f;
+            float h = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 8.0f;
+            this.fireboerd.getWorld().addParticle(ParticleTypes.EXPLOSION_EMITTER, this.fireboerd.getX() + (double)f, this.fireboerd.getY() + 2.0 + (double)g, this.fireboerd.getZ() + (double)h, 0.0, 0.0, 0.0);
+        }
     }
 
     @Override
     public void serverTick() {
-        if (this.ticks % 10 == 0) {
-            float dx = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 8.0f;
-            float dy = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 4.0f;
-            float dz = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 8.0f;
-            ((ServerWorld)this.fireboerd.getWorld()).spawnParticles(ParticleTypes.LAVA, this.fireboerd.getX() + (double)dx, this.fireboerd.getY() + 2.0 + (double)dy, this.fireboerd.getZ() + (double)dz, 10, 0.2, 0.2, 0.2, 0.0);
-        }
-
         ++this.ticks;
     }
 
     @Override
     public void beginPhase() {
-        super.beginPhase();
-
         this.target = null;
+        this.ticks = 0;
     }
 
     @Override
@@ -71,3 +54,4 @@ extends AbstractPhase {
         return PhaseType.DYING;
     }
 }
+
