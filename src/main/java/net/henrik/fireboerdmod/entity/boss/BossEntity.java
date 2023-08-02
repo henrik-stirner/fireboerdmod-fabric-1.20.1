@@ -20,8 +20,7 @@ import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.object.PlayState;
 
-public class BossEntity extends MobEntity implements Monster {
-
+public class BossEntity extends HostileEntity implements Monster {
     private final ServerBossBar bossBar;
 
     public BossEntity(EntityType<? extends BossEntity> entityType, World world, BossBar.Color bossBarColor) {
@@ -34,10 +33,6 @@ public class BossEntity extends MobEntity implements Monster {
         ).setDarkenSky(true);
 
         this.setHealth(this.getMaxHealth());
-    }
-
-    private <T extends GeoAnimatable> PlayState predicate(AnimationState<T> tAnimationState) {
-        return PlayState.CONTINUE;
     }
 
     @Override
