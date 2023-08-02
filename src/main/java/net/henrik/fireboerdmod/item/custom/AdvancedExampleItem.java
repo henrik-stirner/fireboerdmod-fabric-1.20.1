@@ -16,6 +16,10 @@ public class AdvancedExampleItem extends Item {
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        if (world.isClient()) {
+            return TypedActionResult.success(user.getStackInHand(hand), true);
+        }
+
         user.sendMessage(Text.literal("used example item"), false);
 
         return TypedActionResult.success(user.getStackInHand(hand), true);
