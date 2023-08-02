@@ -6,6 +6,9 @@
 
   "item.fireboerdmod.example_item": "Example Item",
   "item.fireboerdmod.errant_fire": "Errant Fire",
+  "item.fireboerdmod.smoke_ball": "Smoke Ball",
+  "item.fireboerdmod.fire_scanner": "Fire Scanner",
+  "item.fireboerdmod.homing_fire": "Homing Fire",
 
   "entity.fireboerdmod.errant_fire": "Errant Fire",
   "entity.fireboerdmod.fireboerd": "Fireboerd"
