@@ -29,6 +29,10 @@ public class ModItemGroups {
             FabricItemGroup.builder().displayName(Text.translatable("itemgroup.fireboerdmod.fiery_group"))
                     .icon(() -> new ItemStack(ModItems.EXAMPLE_ITEM)).entries((displayContext, entries) -> {
                         entries.add(ModItems.ERRANT_FIRE);
+
+                        entries.add(ModItems.SMOKE_BALL);
+                        entries.add(ModItems.FIRE_SCANNER);
+                        entries.add(ModItems.HOMING_FIRE);
                         // ...
                     }).build());
 
@@ -41,6 +45,6 @@ public class ModItemGroups {
     }
 
     public static void registerModItemGroups() {
-        FireboerdMod.LOGGER.info("Registering item groups for " + FireboerdMod.MOD_ID);
+        FireboerdMod.LOGGER.info("Registering mod item groups for " + FireboerdMod.MOD_ID);
     }
 }
