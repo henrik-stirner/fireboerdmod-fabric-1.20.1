@@ -27,7 +27,7 @@ public class AerialPhase extends AbstractPhase {
     public void initPhaseGoals() {
         super.initPhaseGoals();
 
-        this.fireboerd.addGoal(2, new FlyAroundGoal(this.fireboerd, 2.0d));
+        this.fireboerd.addGoal(2, new FlyAroundGoal(this.fireboerd));
     }
 
     private void summonHomingFires() {

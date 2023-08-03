@@ -28,8 +28,8 @@ public class ChargeAttackPhase extends AbstractPhase {
     public void initPhaseGoals() {
         super.initPhaseGoals();
 
-        this.fireboerd.addGoal(2, new ChargeAttackGoal(this.fireboerd, 2.0d, false));
-        this.fireboerd.addGoal(3, new FlyAroundGoal(this.fireboerd, 2.0d));
+        this.fireboerd.addGoal(2, new ChargeAttackGoal(this.fireboerd, 1.0d, false));
+        this.fireboerd.addGoal(3, new FlyAroundGoal(this.fireboerd));
     }
 
     @Override

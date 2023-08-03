@@ -46,7 +46,7 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     private static final BossBar.Color BOSS_BAR_COLOR = BossBar.Color.RED;
     private static final double MAX_HEALTH = 900.0D;
 
-    private static final int EXPERIENCE_POINTS = 100;
+    private static final int EXPERIENCE_POINTS = 69;
 
     // move control
     protected FlightAndDriveMoveControl moveControl;
@@ -83,8 +83,10 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, MAX_HEALTH)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 16.0f)
                 .add(EntityAttributes.GENERIC_ATTACK_SPEED, 1.5f)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.6f)
-                .add(EntityAttributes.GENERIC_FLYING_SPEED, 0.9f);
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.75f)
+                .add(EntityAttributes.GENERIC_FLYING_SPEED, 1.0f)
+                .add(EntityAttributes.GENERIC_ARMOR, 6.0D)
+                .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5D);
     }
 
     @Override
@@ -206,6 +208,10 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     public void tickMovement() {
         super.tickMovement();
 
+        if (this.phaseManager.getCurrentPhase() == null) {
+            return;
+        }
+
         if (this.getWorld().isClient()) {
             this.phaseManager.getCurrentPhase().clientTick();
         } else {
@@ -223,12 +229,16 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putInt(PHASE_KEY, this.phaseManager.getCurrentPhase().getType().getTypeId());
+
+        if (this.phaseManager.getCurrentPhase() != null) {
+            nbt.putInt(PHASE_KEY, this.phaseManager.getCurrentPhase().getType().getTypeId());
+        }
     }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
+
         if (nbt.contains(PHASE_KEY)) {
             this.phaseManager.setPhase(PhaseType.getFromId(nbt.getInt(PHASE_KEY)));
         }
@@ -239,6 +249,7 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
         if (PHASE_TYPE.equals(data) && this.getWorld().isClient) {
             this.phaseManager.setPhase(PhaseType.getFromId(this.getDataTracker().get(PHASE_TYPE)));
         }
+
         super.onTrackedDataSet(data);
     }
 

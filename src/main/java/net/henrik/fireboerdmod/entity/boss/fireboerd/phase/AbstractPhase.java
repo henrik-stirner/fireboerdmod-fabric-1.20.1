@@ -30,7 +30,7 @@ public abstract class AbstractPhase implements Phase {
     }
 
     public void initPhaseGoals() {
-        this.fireboerd.clearGoals(goal -> true);
+        this.fireboerd.clearGoalsAndTasks();
         this.fireboerd.initAlwaysActiveGoals();
     }
 

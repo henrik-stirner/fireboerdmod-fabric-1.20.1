@@ -68,6 +68,7 @@ public class BossEntity extends HostileEntity implements Monster {
             this.discard();
             return;
         }
+
         this.despawnCounter = 0;
     }
 

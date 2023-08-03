@@ -31,7 +31,7 @@ public class PhaseType<T extends Phase> {
 
     public Phase create(FireboerdEntity fireboerd) {
         try {
-            Constructor<Phase> constructor = (Constructor<Phase>) this.getConstructor();
+            Constructor<? extends Phase> constructor = this.getConstructor();
             return constructor.newInstance(fireboerd);
         } catch (Exception exception) {
             throw new Error(exception);
