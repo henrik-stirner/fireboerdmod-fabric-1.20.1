@@ -1,21 +1,16 @@
 package net.henrik.fireboerdmod.entity.boss.fireboerd;
 
 import net.henrik.fireboerdmod.entity.boss.BossEntity;
-import net.henrik.fireboerdmod.entity.boss.fireboerd.control.FlightAndDriveMoveControl;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.control.HybridMoveControl;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseManager;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseType;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.control.FlightMoveControl;
-import net.minecraft.entity.ai.control.MoveControl;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.pathing.BirdNavigation;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -23,7 +18,7 @@ import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
@@ -37,8 +32,6 @@ import software.bernie.geckolib.core.animatable.instance.SingletonAnimatableInst
 import software.bernie.geckolib.core.animation.*;
 import software.bernie.geckolib.core.object.PlayState;
 
-import java.util.Random;
-
 public class FireboerdEntity extends BossEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
 
@@ -48,8 +41,12 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
 
     private static final int EXPERIENCE_POINTS = 69;
 
+    public static final double MOVEMENT_SPEED = 0.5d;
+    public static final double FLIGHT_SPEED = 0.75d;
+    public static final double ATTACK_SPEED = 1.5d;
+
     // move control
-    protected FlightAndDriveMoveControl moveControl;
+    protected HybridMoveControl moveControl;
 
     // phases
     public static final TrackedData<Integer> PHASE_TYPE = DataTracker.registerData(FireboerdEntity.class,
@@ -62,7 +59,7 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
         super(entityType, world, BOSS_BAR_COLOR);
         this.experiencePoints = EXPERIENCE_POINTS;
 
-        this.moveControl = new FlightAndDriveMoveControl(this, 10, true, true);
+        this.moveControl = new HybridMoveControl(this, 10, true, true);
         this.phaseManager = new PhaseManager(this);
 
         this.setPathfindingPenalty(PathNodeType.WATER, -1.0f);
@@ -71,20 +68,17 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
         this.setPathfindingPenalty(PathNodeType.DAMAGE_FIRE, 0.0f);
     }
 
-    // random
-    public Random random = new Random();
-
     // ====================================================================================================
     // defaults
     // ====================================================================================================
 
     public static DefaultAttributeContainer.Builder setAttributes() {
-        return HostileEntity.createMobAttributes()
+        return PathAwareEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, MAX_HEALTH)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 16.0f)
-                .add(EntityAttributes.GENERIC_ATTACK_SPEED, 1.5f)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.75f)
-                .add(EntityAttributes.GENERIC_FLYING_SPEED, 1.0f)
+                .add(EntityAttributes.GENERIC_ATTACK_SPEED, ATTACK_SPEED)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, MOVEMENT_SPEED)
+                .add(EntityAttributes.GENERIC_FLYING_SPEED, FLIGHT_SPEED)
                 .add(EntityAttributes.GENERIC_ARMOR, 6.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5D);
     }
@@ -129,14 +123,6 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
         this.goalSelector.remove(goal);
     }
 
-    public void addTargetGoal(int priority, Goal goal) {
-        this.targetSelector.add(priority, goal);
-    }
-
-    public void removeTargetGoal(Goal goal) {
-        this.targetSelector.remove(goal);
-    }
-
     public void initAlwaysActiveGoals() {
         this.goalSelector.add(1, new SwimGoal(this));
         this.targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
@@ -147,36 +133,20 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
         this.initAlwaysActiveGoals();
     }
 
-    /**
-        this.goalSelector.add(1, new SwimGoal(this));
-
-        this.goalSelector.add(2, new MeleeAttackGoal(this, 1.2D, false));
-        // ChargeTargetGoal
-
-        // ProjectileAttackGoal
-        // ShootBulletGoal
-        // ShootFireballGoal (Ghast / Blaze)
-
-        // LookAtTargetGoal
-
-        // FlyGoal
-        // FlyRandomlyGoal
-        this.goalSelector.add(3, new WanderAroundFarGoal(this, 0.75f, 1));
-
-        // SitGoal
-        this.goalSelector.add(4, new LookAroundGoal(this));
-     */
-
     // ====================================================================================================
     // animations
     // ====================================================================================================
 
     private <T extends GeoAnimatable> PlayState predicate(AnimationState<T> tAnimationState) {
-        if(tAnimationState.isMoving()) {
-            tAnimationState.getController().setAnimation(RawAnimation.begin().then("animation.fireboerd.walk", Animation.LoopType.LOOP));
+        if (tAnimationState.isMoving()) {
+            if (this.moveControl.isOnFlightMode) {
+                tAnimationState.getController().setAnimation(RawAnimation.begin().then("animation.fireboerd.flying", Animation.LoopType.LOOP));
+            } else {
+                tAnimationState.getController().setAnimation(RawAnimation.begin().then("animation.fireboerd.walking", Animation.LoopType.LOOP));
+            }
+        } else {
+            tAnimationState.getController().setAnimation(RawAnimation.begin().then("animation.fireboerd.idle", Animation.LoopType.LOOP));
         }
-
-        tAnimationState.getController().setAnimation(RawAnimation.begin().then("animation.fireboerd.idle", Animation.LoopType.LOOP));
 
         return PlayState.CONTINUE;
     }
@@ -194,15 +164,6 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     // ====================================================================================================
     // other
     // ====================================================================================================
-
-    @Override
-    protected EntityNavigation createNavigation(World world) {
-        BirdNavigation birdNavigation = new BirdNavigation(this, world);
-        birdNavigation.setCanPathThroughDoors(false);
-        birdNavigation.setCanSwim(true);
-        birdNavigation.setCanEnterOpenDoors(true);
-        return birdNavigation;
-    }
 
     @Override
     public void tickMovement() {

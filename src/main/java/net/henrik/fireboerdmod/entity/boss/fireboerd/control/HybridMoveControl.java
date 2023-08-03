@@ -5,13 +5,13 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.math.MathHelper;
 
-public class FlightAndDriveMoveControl extends MoveControl {
+public class HybridMoveControl extends MoveControl {
     public boolean isOnFlightMode;
 
     private final int maxPitchChange;
     private final boolean noGravity;
 
-    public FlightAndDriveMoveControl(MobEntity entity, int maxPitchChange, boolean noGravity, boolean isOnFlightMode) {
+    public HybridMoveControl(MobEntity entity, int maxPitchChange, boolean noGravity, boolean isOnFlightMode) {
         super(entity);
 
         this.maxPitchChange = maxPitchChange;
