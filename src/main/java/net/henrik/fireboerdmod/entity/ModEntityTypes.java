@@ -27,7 +27,7 @@ public class ModEntityTypes {
             Registries.ENTITY_TYPE,
             new Identifier(FireboerdMod.MOD_ID, "fireboerd"),
             FabricEntityTypeBuilder.<FireboerdEntity>create(SpawnGroup.CREATURE, FireboerdEntity::new)
-                    .dimensions(EntityDimensions.fixed(2.5f, 3.0f))
+                    .dimensions(EntityDimensions.fixed(1.75f, 3.0f))
                     .build()
     );
 

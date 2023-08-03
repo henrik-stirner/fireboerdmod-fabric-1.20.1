@@ -4,6 +4,7 @@
 package net.henrik.fireboerdmod.entity.boss.fireboerd.phase.custom;
 
 import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.goal.FlyAroundTargetGoal;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.AbstractPhase;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseType;
 import net.henrik.fireboerdmod.visual_effect.CylindricalFireScannerEffect;
@@ -35,12 +36,9 @@ public class SpawningPhase extends AbstractPhase {
     }
 
     @Override
-    public void initPhaseGoals() {
-        super.initPhaseGoals();
-    }
-
-    @Override
     public void serverTick() {
+        super.serverTick();
+
         if (this.ticks == 0) {
             for (PlayerEntity playerEntity: this.fireboerd.getWorld().getPlayers()) {
                 playerEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 60),
@@ -61,10 +59,14 @@ public class SpawningPhase extends AbstractPhase {
                     6.0d,
                     1
             );
-        } else if (this.ticks == 100) {
-            this.fireboerd.addGoal(2, new FlyGoal(this.fireboerd, 1.0));
-        } else if (this.ticks == 200) {
-            if (fireboerd.random.nextBoolean()) {
+        } else if (this.ticks > 100 && this.ticks < 150 && this.ticks % 10 == 0) {
+            this.fireboerd.setVelocity(this.fireboerd.getVelocity().add(
+                    this.fireboerd.getRandom().nextDouble() * 0.25,
+                    this.fireboerd.getRandom().nextDouble() * (1 - 0.75) + 0.75,
+                    this.fireboerd.getRandom().nextDouble() * 0.25
+            ));
+        } else if (this.ticks == 150) {
+            if (fireboerd.getRandom().nextBoolean()) {
                 this.fireboerd.getPhaseManager().setPhase(PhaseType.TERRESTRIAL);
             } else {
                 this.fireboerd.getPhaseManager().setPhase(PhaseType.AERIAL);

@@ -35,14 +35,15 @@ extends AbstractPhase {
 
     @Override
     public void initPhaseGoals() {
-        super.initPhaseGoals();
-
-        this.fireboerd.addGoal(2, new MeleeAttackGoal(this.fireboerd, 0.5d, false));
-        this.fireboerd.addGoal(3, new WanderNearTargetGoal(this.fireboerd, 0.5d, 8));
+        this.phaseGoals.put(2, new MeleeAttackGoal(this.fireboerd, FireboerdEntity.MOVEMENT_SPEED / 2, false));
+        this.phaseGoals.put(3, new WanderNearTargetGoal(this.fireboerd, FireboerdEntity.MOVEMENT_SPEED / 2, 8));
     }
 
     @Override
     public void serverTick() {
+        // this is already the dying phase
+//        super.serverTick();
+
         if (this.ticks % 10 == 0) {
             float dx = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 8.0f;
             float dy = (this.fireboerd.getRandom().nextFloat() - 0.5f) * 4.0f;

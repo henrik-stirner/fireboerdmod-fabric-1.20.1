@@ -2,7 +2,7 @@ package net.henrik.fireboerdmod.entity.boss.fireboerd.phase.custom;
 
 import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.goal.ChargeAttackGoal;
-import net.henrik.fireboerdmod.entity.boss.fireboerd.goal.FlyAroundGoal;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.goal.FlyAroundTargetGoal;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.AbstractPhase;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseType;
 import net.minecraft.entity.ai.control.FlightMoveControl;
@@ -26,14 +26,14 @@ public class ChargeAttackPhase extends AbstractPhase {
 
     @Override
     public void initPhaseGoals() {
-        super.initPhaseGoals();
-
-        this.fireboerd.addGoal(2, new ChargeAttackGoal(this.fireboerd, 1.0d, false));
-        this.fireboerd.addGoal(3, new FlyAroundGoal(this.fireboerd));
+        this.phaseGoals.put(2, new ChargeAttackGoal(this.fireboerd));
+        this.phaseGoals.put(3, new FlyAroundTargetGoal(this.fireboerd));
     }
 
     @Override
     public void serverTick() {
+        super.serverTick();
+
         if (this.ticks == 600) {
             this.fireboerd.getPhaseManager().setPhase(PhaseType.AERIAL);
         }

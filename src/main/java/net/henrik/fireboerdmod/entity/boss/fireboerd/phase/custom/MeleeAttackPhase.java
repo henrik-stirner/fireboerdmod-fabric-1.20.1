@@ -29,14 +29,14 @@ public class MeleeAttackPhase extends AbstractPhase {
 
     @Override
     public void initPhaseGoals() {
-        super.initPhaseGoals();
-
-        this.fireboerd.addGoal(2, new MeleeAttackGoal(this.fireboerd, 1.0d, false));
-        this.fireboerd.addGoal(3, new WanderNearTargetGoal(this.fireboerd, 1.0d, 8));
+        this.phaseGoals.put(2, new MeleeAttackGoal(this.fireboerd, FireboerdEntity.ATTACK_SPEED, false));
+        this.phaseGoals.put(3, new WanderNearTargetGoal(this.fireboerd, FireboerdEntity.MOVEMENT_SPEED, 8));
     }
 
     @Override
     public void serverTick() {
+        super.serverTick();
+
         if (this.ticks == 600) {
             this.fireboerd.getPhaseManager().setPhase(PhaseType.TERRESTRIAL);
         }

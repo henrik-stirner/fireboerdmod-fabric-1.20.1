@@ -263,6 +263,7 @@ public class ErrantFireEntity extends ProjectileEntity {
 
         if (this.getWorld().isClient) {
             this.getWorld().addParticle(ParticleTypes.SMOKE, this.getX() - vec3d.x, this.getY() - vec3d.y + 0.15, this.getZ() - vec3d.z, 0.0, 0.0, 0.0);
+            this.getWorld().addParticle(ParticleTypes.SMALL_FLAME, this.getX() - vec3d.x, this.getY() - vec3d.y + 0.15, this.getZ() - vec3d.z, 0.0, 0.0, 0.0);
         } else if (this.target != null && !this.target.isRemoved()) {
             if (this.stepCount > 0) {
                 --this.stepCount;

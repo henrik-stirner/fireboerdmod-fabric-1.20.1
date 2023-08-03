@@ -28,9 +28,7 @@ public class TerrestrialPhase extends AbstractPhase {
 
     @Override
     public void initPhaseGoals() {
-        super.initPhaseGoals();
-
-        this.fireboerd.addGoal(2, new WanderNearTargetGoal(this.fireboerd, 1.0d, 8));
+        this.phaseGoals.put(2, new WanderNearTargetGoal(this.fireboerd, FireboerdEntity.MOVEMENT_SPEED, 8));
     }
 
     private void summonErrantFires() {
@@ -38,7 +36,7 @@ public class TerrestrialPhase extends AbstractPhase {
             return;
         }
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 16; ++i) {
             ErrantFireEntity newErrantFireEntity = new ErrantFireEntity(
                     this.fireboerd.getWorld(),
                     this.fireboerd,
@@ -52,14 +50,16 @@ public class TerrestrialPhase extends AbstractPhase {
 
     @Override
     public void serverTick() {
+        super.serverTick();
+
         if (this.ticks == 200) {
-            if (fireboerd.random.nextDouble() <= 0.6) {  // 60 % of cases
+            if (fireboerd.getRandom().nextDouble() <= 0.6) {  // 60 % of cases
                 this.fireboerd.getPhaseManager().setPhase(PhaseType.MELEE_ATTACK);
             } else {  // 40 %
                 this.fireboerd.getPhaseManager().setPhase(PhaseType.AERIAL);
             }
         } else if (this.ticks % 50 == 0) {
-            if (this.fireboerd.random.nextBoolean()) {
+            if (this.fireboerd.getRandom().nextBoolean()) {
                 this.summonErrantFires();
             }
         }
