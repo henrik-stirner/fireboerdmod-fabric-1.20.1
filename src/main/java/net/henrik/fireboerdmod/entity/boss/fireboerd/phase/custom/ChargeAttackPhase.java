@@ -21,7 +21,7 @@ public class ChargeAttackPhase extends AbstractPhase {
 
     @Override
     public void initPhaseMoveControl() {
-        this.fireboerd.setMoveControl(new FlightMoveControl(this.fireboerd, 10, true));
+        this.fireboerd.setOnFlightMode();
     }
 
     @Override

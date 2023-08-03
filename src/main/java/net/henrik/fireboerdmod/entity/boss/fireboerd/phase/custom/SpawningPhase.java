@@ -31,7 +31,7 @@ public class SpawningPhase extends AbstractPhase {
 
     @Override
     public void initPhaseMoveControl() {
-        this.fireboerd.setMoveControl(new FlightMoveControl(this.fireboerd, 10, true));
+        this.fireboerd.setOnFlightMode();
     }
 
     @Override
@@ -62,7 +62,7 @@ public class SpawningPhase extends AbstractPhase {
                     1
             );
         } else if (this.ticks == 100) {
-            this.fireboerd.addGoal(2, new FlyGoal(this.fireboerd, 2.0d));
+            this.fireboerd.addGoal(2, new FlyGoal(this.fireboerd, 0.75d));
         } else if (this.ticks == 200) {
             if (fireboerd.random.nextBoolean()) {
                 this.fireboerd.getPhaseManager().setPhase(PhaseType.TERRESTRIAL);

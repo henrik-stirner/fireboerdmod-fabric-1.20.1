@@ -23,7 +23,7 @@ public class TerrestrialPhase extends AbstractPhase {
 
     @Override
     public void initPhaseMoveControl() {
-        this.fireboerd.setMoveControl(new MoveControl(this.fireboerd));
+        this.fireboerd.setOnDriveMode();
     }
 
     @Override
@@ -31,7 +31,6 @@ public class TerrestrialPhase extends AbstractPhase {
         super.initPhaseGoals();
 
         this.fireboerd.addGoal(2, new WanderNearTargetGoal(this.fireboerd, 1.0d, 8));
-        this.fireboerd.addGoal(3, new WanderAroundFarGoal(this.fireboerd, 1.0d, 0.25f));
     }
 
     private void summonErrantFires() {

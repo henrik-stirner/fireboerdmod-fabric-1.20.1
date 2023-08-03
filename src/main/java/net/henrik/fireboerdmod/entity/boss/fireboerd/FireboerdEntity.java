@@ -1,6 +1,7 @@
 package net.henrik.fireboerdmod.entity.boss.fireboerd;
 
 import net.henrik.fireboerdmod.entity.boss.BossEntity;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.control.FlightAndDriveMoveControl;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseManager;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.phase.PhaseType;
 import net.minecraft.block.BlockState;
@@ -14,6 +15,7 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.pathing.BirdNavigation;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
+import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -46,6 +48,9 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
 
     private static final int EXPERIENCE_POINTS = 100;
 
+    // move control
+    protected FlightAndDriveMoveControl moveControl;
+
     // phases
     public static final TrackedData<Integer> PHASE_TYPE = DataTracker.registerData(FireboerdEntity.class,
             TrackedDataHandlerRegistry.INTEGER);
@@ -55,8 +60,10 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
 
     public FireboerdEntity(EntityType<? extends FireboerdEntity> entityType, World world) {
         super(entityType, world, BOSS_BAR_COLOR);
-        this.phaseManager = new PhaseManager(this);
         this.experiencePoints = EXPERIENCE_POINTS;
+
+        this.moveControl = new FlightAndDriveMoveControl(this, 10, true, true);
+        this.phaseManager = new PhaseManager(this);
 
         this.setPathfindingPenalty(PathNodeType.WATER, -1.0f);
         this.setPathfindingPenalty(PathNodeType.LAVA, 8.0f);
@@ -96,8 +103,16 @@ public class FireboerdEntity extends BossEntity implements GeoEntity {
     // move control
     // ====================================================================================================
 
-    public void setMoveControl(MoveControl newMoveControl) {
-        this.moveControl = newMoveControl;
+//    public void setMoveControl(MoveControl newMoveControl) {
+//        this.moveControl = newMoveControl;
+//    }
+
+    public void setOnFlightMode() {
+        this.moveControl.setOnFlightMode(true);
+    }
+
+    public void setOnDriveMode() {
+        this.moveControl.setOnFlightMode(false);
     }
 
     // ====================================================================================================

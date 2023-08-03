@@ -24,7 +24,7 @@ public class MeleeAttackPhase extends AbstractPhase {
 
     @Override
     public void initPhaseMoveControl() {
-        this.fireboerd.setMoveControl(new MoveControl(this.fireboerd));
+        this.fireboerd.setOnDriveMode();
     }
 
     @Override
@@ -33,7 +33,6 @@ public class MeleeAttackPhase extends AbstractPhase {
 
         this.fireboerd.addGoal(2, new MeleeAttackGoal(this.fireboerd, 1.0d, false));
         this.fireboerd.addGoal(3, new WanderNearTargetGoal(this.fireboerd, 1.0d, 8));
-        this.fireboerd.addGoal(4, new WanderAroundFarGoal(this.fireboerd, 1.0d, 0.25f));
     }
 
     @Override

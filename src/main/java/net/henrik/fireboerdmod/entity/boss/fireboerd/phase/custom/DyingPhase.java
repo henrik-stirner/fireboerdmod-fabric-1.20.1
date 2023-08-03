@@ -30,7 +30,7 @@ extends AbstractPhase {
 
     @Override
     public void initPhaseMoveControl() {
-        this.fireboerd.setMoveControl(new MoveControl(this.fireboerd));
+        this.fireboerd.setOnDriveMode();
     }
 
     @Override
@@ -39,7 +39,6 @@ extends AbstractPhase {
 
         this.fireboerd.addGoal(2, new MeleeAttackGoal(this.fireboerd, 0.5d, false));
         this.fireboerd.addGoal(3, new WanderNearTargetGoal(this.fireboerd, 0.5d, 8));
-        this.fireboerd.addGoal(4, new WanderAroundGoal(this.fireboerd, 0.5d, 25));
     }
 
     @Override
