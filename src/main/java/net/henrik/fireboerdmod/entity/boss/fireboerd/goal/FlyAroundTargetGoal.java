@@ -3,7 +3,6 @@ package net.henrik.fireboerdmod.entity.boss.fireboerd.goal;
 import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
@@ -12,8 +11,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumSet;
 import java.util.Objects;
 
-public class ChargeAttackGoal extends Goal {
-    private final double MAX_TARGET_OFFSET = 12.0d;
+public class FlyAroundTargetGoal extends Goal {
+    private final double PREFERRED_HEIGHT = 8.0d;
+    private final double MAX_TARGET_OFFSET = 16.0d;
 
     private final FireboerdEntity fireboerd;
 
@@ -30,7 +30,7 @@ public class ChargeAttackGoal extends Goal {
     private final int TICKS_UNTIL_MOVE_TO_POS_UPDATE = 10;
     private Vec3d currentVelocity;
 
-    public ChargeAttackGoal(FireboerdEntity fireboerd) {
+    public FlyAroundTargetGoal(FireboerdEntity fireboerd) {
         this.setControls(EnumSet.of(Goal.Control.MOVE));
 
         this.fireboerd = fireboerd;
@@ -39,22 +39,11 @@ public class ChargeAttackGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        return this.fireboerd.getTarget() != null && !this.fireboerd.hasPassengers();
+        return !this.fireboerd.hasPassengers();
     }
 
     @Override
     public boolean shouldContinue() {
-        this.target = this.fireboerd.getTarget();
-
-        if (this.target == null) {
-            return false;
-        } else if (!this.target.isAlive()) {
-            return false;
-        } else if (this.target instanceof PlayerEntity) {
-            PlayerEntity targetPlayer = (PlayerEntity)this.target;
-            return !targetPlayer.isSpectator() && !targetPlayer.isCreative();
-        }
-
         return true;
     }
 
@@ -78,10 +67,10 @@ public class ChargeAttackGoal extends Goal {
         double angle = random.nextInt(359);
         double radius = random.nextDouble() * this.MAX_TARGET_OFFSET;
 
-        // random position on circle around target pos with y-coordinate corresponding to the one of the target
+        // random position on circle around target pos with y-coordinate corresponding to the preferred offset
         Vec3d moveToPos = this.targetPos.add(
                 radius * Math.cos(angle),
-                this.random.nextDouble() * (4 - 0.5) + 0.5,
+                (this.targetPos.getY() + this.PREFERRED_HEIGHT) - this.fireboerd.getY(),
                 radius * Math.sin(angle)
         );
 
@@ -123,27 +112,20 @@ public class ChargeAttackGoal extends Goal {
 
     @Override
     public void tick() {
-        LivingEntity livingEntity = this.fireboerd.getTarget();
-        if (livingEntity == null) {
-            return;
-        }
-
         this.updateTargetPos();
 
         if (this.ticker % 5 == 0) {
             this.fireboerd.setVelocity(this.fireboerd.getVelocity().add(0.0d, 0.5d, 0.0d));
         }
 
-        updateVelocity();
+        if (this.ticker % this.TICKS_UNTIL_MOVE_TO_POS_UPDATE == 0) {
+            updateVelocity();
+        }
 
         double noise = this.random.nextDouble() * (1.125 - 0.875) + 0.875;
         this.fireboerd.setVelocity(this.fireboerd.getVelocity().add(this.currentVelocity.multiply(noise)));
 
         this.updateRotation();
-
-        if (this.fireboerd.getBoundingBox().expand(0.2f).intersects(livingEntity.getBoundingBox())) {
-            this.fireboerd.tryAttack(livingEntity);
-        }
 
         this.updateTicker();
     }
