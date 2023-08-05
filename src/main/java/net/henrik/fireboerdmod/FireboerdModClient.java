@@ -7,7 +7,7 @@ import net.henrik.fireboerdmod.client.render.entity.custom.model.layer.ModEntity
 public class FireboerdModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        // Register everything for entity-rendering
+        // Everything entity-rendering
         ModEntityRenderers.registerModRenderers();
         ModEntityModelLayers.registerModEntityModelLayers();
     }
