@@ -41,7 +41,7 @@ public class TerrestrialPhase extends AbstractPhase {
                     this.fireboerd.getWorld(),
                     this.fireboerd,
                     this.fireboerd.getTarget(),
-                    false,
+                    true,
                     Direction.Axis.pickRandomAxis(Random.create())
             );
             this.fireboerd.getWorld().spawnEntity(newErrantFireEntity);

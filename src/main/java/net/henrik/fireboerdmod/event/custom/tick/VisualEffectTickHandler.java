@@ -1,4 +1,4 @@
-package net.henrik.fireboerdmod.event;
+package net.henrik.fireboerdmod.event.custom.tick;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,6 @@ public class VisualEffectTickHandler {
 
     public static List<CylindricalFireScannerEffect> cylindricalFireScannerEffects = new LinkedList<>();
     public static List<HomingFireEffect> homingFireEffects = new LinkedList<>();
-
     public static List<SmokeBallEffect> smokeBallEffects = new LinkedList<>();
 
     public static class VisualEffectStartTickHandler implements ServerTickEvents.StartTick {

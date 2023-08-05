@@ -16,12 +16,10 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 public class ModItems {
-    // public static final Item EXAMPLE_ITEM = registerItem("example_item", new Item(new FabricItemSettings()));
-    public static final Item EXAMPLE_ITEM = registerItem("example_item", new AdvancedExampleItem(
-            new FabricItemSettings()));
+//    public static final Item EXAMPLE_ITEM = registerItem("example_item", new Item(new FabricItemSettings()));
 
-    // public static final Item EXAMPLE_FOOD = registerItem("example_food", new AdvancedExampleItem(
-    //        new FabricItemSettings().food(ModFoodComponents.EXAMPLE_FOOD)));
+//    public static final Item EXAMPLE_FOOD = registerItem("example_food", new Item(
+//            new FabricItemSettings().food(ModFoodComponents.EXAMPLE_FOOD)));
 
     /* PROJECTILES */
     public static final Item ERRANT_FIRE = registerItem("errant_fire", new ErrantFireItem(

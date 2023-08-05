@@ -1,16 +1,12 @@
 package net.henrik.fireboerdmod.visual_effect;
 
-import net.henrik.fireboerdmod.FireboerdMod;
-import net.henrik.fireboerdmod.event.VisualEffectTickHandler;
+import net.henrik.fireboerdmod.event.custom.tick.VisualEffectTickHandler;
 import net.henrik.fireboerdmod.visual_effect.shape.LineShape;
-import net.henrik.fireboerdmod.visual_effect.shape.RingShape;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Random;

@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.block.v1.FabricBlock;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.henrik.fireboerdmod.FireboerdMod;
-import net.henrik.fireboerdmod.block.custom.AdvancedExampleBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
@@ -16,8 +15,6 @@ import net.minecraft.util.Identifier;
 public class ModBlocks {
     // public static final Block EXAMPLE_BLOCK = registerBlock("example_block",
     //        new Block(FabricBlockSettings.copyOf(Blocks.STONE)));
-    public static final Block EXAMPLE_BLOCK = registerBlock("example_block",
-            new AdvancedExampleBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
 
     /**
      * Register blocks and block items

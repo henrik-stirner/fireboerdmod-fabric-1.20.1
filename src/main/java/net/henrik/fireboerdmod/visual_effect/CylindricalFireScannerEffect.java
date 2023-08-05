@@ -1,6 +1,6 @@
 package net.henrik.fireboerdmod.visual_effect;
 
-import net.henrik.fireboerdmod.event.VisualEffectTickHandler;
+import net.henrik.fireboerdmod.event.custom.tick.VisualEffectTickHandler;
 import net.henrik.fireboerdmod.visual_effect.shape.RingShape;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;

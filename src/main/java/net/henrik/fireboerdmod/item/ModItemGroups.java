@@ -17,17 +17,9 @@ public class ModItemGroups {
      * Add item groups to the creative menu
      */
 
-    public static final ItemGroup EXAMPLE_GROUP = registerItemGroup("example_group",
-            FabricItemGroup.builder().displayName(Text.translatable("itemgroup.fireboerdmod.example_group"))
-            .icon(() -> new ItemStack(ModItems.EXAMPLE_ITEM)).entries((displayContext, entries) -> {
-                entries.add(ModItems.EXAMPLE_ITEM);
-                entries.add(ModBlocks.EXAMPLE_BLOCK);
-                // ...
-            }).build());
-
     public static final ItemGroup FIERY_GROUP = registerItemGroup("fiery_group",
             FabricItemGroup.builder().displayName(Text.translatable("itemgroup.fireboerdmod.fiery_group"))
-                    .icon(() -> new ItemStack(ModItems.EXAMPLE_ITEM)).entries((displayContext, entries) -> {
+                    .icon(() -> new ItemStack(ModItems.ERRANT_FIRE)).entries((displayContext, entries) -> {
                         entries.add(ModItems.ERRANT_FIRE);
 
                         entries.add(ModItems.SMOKE_BALL);
