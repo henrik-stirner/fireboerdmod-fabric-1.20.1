@@ -1,4 +1,4 @@
-package net.henrik.fireboerdmod.event.custom.tick;
+package net.henrik.fireboerdmod.handler.tick;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +64,8 @@ public class VisualEffectTickHandler {
     }
 
     public void registerTickHandlers() {
+        FireboerdMod.LOGGER.info("Registering visual effect tick handlers for " + FireboerdMod.MOD_ID);
+
         ServerTickEvents.START_SERVER_TICK.register(this.START_TICK_HANDLER);
         // NEVER USED:
         // ServerTickEvents.END_SERVER_TICK.register(this.END_TICK_HANDLER);

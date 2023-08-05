@@ -4,7 +4,7 @@ import net.fabricmc.api.ModInitializer;
 
 import net.henrik.fireboerdmod.block.ModBlocks;
 import net.henrik.fireboerdmod.entity.ModEntityTypes;
-import net.henrik.fireboerdmod.event.ModEventHandlers;
+import net.henrik.fireboerdmod.handler.ModEventHandlers;
 import net.henrik.fireboerdmod.item.ModItemGroups;
 import net.henrik.fireboerdmod.item.ModItems;
 import org.slf4j.Logger;
