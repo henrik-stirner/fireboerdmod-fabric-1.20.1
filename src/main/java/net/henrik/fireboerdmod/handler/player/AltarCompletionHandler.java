@@ -10,7 +10,7 @@ public class AltarCompletionHandler {
         if (FireboerdRitual.checkPossibleAltarCompletion(context, state)) {
             new FireboerdRitual(
                     context.getWorld(),
-                    context.getBlockPos().toCenterPos()
+                    context.getBlockPos()
             );
         }
     }
