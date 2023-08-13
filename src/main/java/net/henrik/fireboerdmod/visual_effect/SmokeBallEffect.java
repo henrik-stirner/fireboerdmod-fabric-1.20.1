@@ -19,7 +19,8 @@ public class SmokeBallEffect extends VisualEffect {
         super(world, position, duration);
 
         // smaller difference between min and max radius -> less particles -> better performance
-        randomSphereShape = new RandomSphereShape(radius - 1.0d, radius, this.RESOLUTION);
+        double minRadius = radius > 1 ? radius - 1 : 0;
+        randomSphereShape = new RandomSphereShape(minRadius, radius, this.RESOLUTION);
 
         if (world == null || position == null) {
             return;
