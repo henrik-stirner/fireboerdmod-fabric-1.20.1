@@ -1,26 +1,19 @@
 package net.henrik.fireboerdmod.ritual;
 
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
-import net.henrik.fireboerdmod.FireboerdMod;
+import net.henrik.fireboerdmod.entity.ModEntityTypes;
+import net.henrik.fireboerdmod.entity.boss.fireboerd.FireboerdEntity;
 import net.henrik.fireboerdmod.handler.tick.RitualTickHandler;
-import net.henrik.fireboerdmod.visual_effect.SmokeBallEffect;
 import net.henrik.fireboerdmod.visual_effect.shape.LineShape;
 import net.henrik.fireboerdmod.visual_effect.shape.RandomSphereShape;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CampfireBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.TargetPredicate;
-import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -31,28 +24,21 @@ import net.minecraft.world.WorldEvents;
 import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 public class FireboerdRitual extends Ritual {
     private final int RESOLUTION = 5;
+    public final Integer DURATION = 750;
     private final LineShape lineShape = new LineShape(this.RESOLUTION);
     private final RandomSphereShape smallBallShape = new RandomSphereShape(0, 1, this.RESOLUTION);
 
 
-    // for tracing lines
-    private final int traceLineDuration = 20;
-
-    private final List<List<Vec3d>> linesToTrace = new LinkedList<>();
-    private int traceLineStep = 1;
-    private int traceLinePointsPerStep;
-
-
-    public final Integer duration = 300;
-
+    // for checking altar completion
     protected static final List<Identifier> allowedDimensions = List.of(
             new Identifier("overworld")
     );
     protected static final Item finishingBlockItem = Items.BLACK_STAINED_GLASS;
+
+    // layout
 
     private final BlockPos originBlockPos;
 
@@ -66,10 +52,37 @@ public class FireboerdRitual extends Ritual {
 
     private static final List<Vec3i> campfirePositions = new ArrayList<>();
 
+
+    // for tracing lines
+    private final int traceSingleLineDuration = 20;
+    private int tracedAllLinesAtTick;  // tick, on which all lines have been traced
+    private final List<List<Vec3d>> linesToTrace = new LinkedList<>();
+    private int numberOfLinesToTrace;
+    private int traceLineStep = 1;
+    private int traceLinePointsPerStep;
+
+
+    // flashing fireballs and -lines
+    private final List<Vec3d> initialFlashingFireballPositions = new LinkedList<>();
+    private final List<Vec3d> activeFlashingFireballPositions = new LinkedList<>();
+
+    private double flashingFireballUpwardMovementPerTick;
+
+    private int flashingFireballDrawRate = 40;
+
+    private final Vec3d fireballCenterPos;
+
+
     public FireboerdRitual(World world, BlockPos position) {
         super(world, position.toCenterPos());
 
         this.originBlockPos = position;
+
+        this.fireballCenterPos = position.toCenterPos().add(
+                0,
+                ModEntityTypes.FIREBOERD.getHeight() - 1,
+                0
+        );
 
         RitualTickHandler.fireboerdRituals.add(this);
     }
@@ -191,17 +204,58 @@ public class FireboerdRitual extends Ritual {
         }
     }
 
-    private void traceLine(ParticleEffect particleType) {
+    private void extinguishCampfires() {
+        for (Vec3i campfirePosition : campfirePositions) {
+            BlockPos blockPos = this.originBlockPos.add(campfirePosition);
+            BlockState blockState = world.getBlockState(blockPos);
+
+            if (blockState.getBlock() == Blocks.CAMPFIRE && blockState.get(CampfireBlock.LIT)) {
+                world.syncWorldEvent(null, WorldEvents.FIRE_EXTINGUISHED, blockPos, 0);
+                CampfireBlock.extinguish(null, world, blockPos, blockState);
+
+                BlockState updatedBlockState = blockState.with(CampfireBlock.LIT, false);
+                world.setBlockState(blockPos, updatedBlockState, Block.NOTIFY_ALL | Block.REDRAW_ON_MAIN_THREAD);
+                world.emitGameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Emitter.of(updatedBlockState));
+            }
+        }
+    }
+
+    private void calculateInitialFlashingFireballPositions() {
+        for (Vec3i campfirePosition : campfirePositions) {
+            this.initialFlashingFireballPositions.add(
+                    this.originBlockPos.add(campfirePosition).toCenterPos().add(0, 1, 0));
+        }
+    }
+
+    private void calculatePositionsOnLinesToCampfires() {
+        for (int i = 0; i < campfireX.size(); ++i) {
+            Vec3d origin = this.originBlockPos.add(new Vec3i(edgeBLockX.get(i), -1, edgeBLockZ.get(i))).toCenterPos();
+            Vec3d campfire = this.originBlockPos.add(new Vec3i(campfireX.get(i), -1, campfireZ.get(i))).toCenterPos();
+
+            int j = i + 1 < edgeBLockX.size() ? i + 1 : 0;
+            Vec3d target = this.originBlockPos.add(new Vec3i(edgeBLockX.get(j), -1, edgeBLockZ.get(j))).toCenterPos();
+
+            this.linesToTrace.add(this.lineShape.calculateCorrespondingPositions(origin, campfire));
+            this.linesToTrace.add(this.lineShape.calculateCorrespondingPositions(campfire, target));
+        }
+        this.numberOfLinesToTrace = this.linesToTrace.size();
+
+        this.traceLinePointsPerStep = Math.round((float) this.linesToTrace.get(0).size() / this.traceSingleLineDuration);
+    }
+
+    /**
+     * traces the campfire-lighting lines in the beginning of the ritual
+     * (tick-based)
+     */
+
+    private void traceLinesToCampfires(ParticleEffect particleType) {
         if (this.linesToTrace.size() == 0) {
-            FireboerdMod.LOGGER.info("MISERABLE");
             return;
         }
 
         int firstPointIndex = this.traceLinePointsPerStep * this.traceLineStep;
         int numberOfPoints = firstPointIndex + this.traceLinePointsPerStep <= this.linesToTrace.get(0).size() ?
                 this.traceLinePointsPerStep : this.linesToTrace.get(0).size() - firstPointIndex;
-
-        FireboerdMod.LOGGER.info("N: " + numberOfPoints + " T: " + this.ticks);
 
         for (int i = 0; i < numberOfPoints; ++i) {
             int currentPointIndex = firstPointIndex + i;
@@ -216,13 +270,38 @@ public class FireboerdRitual extends Ritual {
             );
         }
 
-        if (this.traceLineStep >= this.traceLineDuration) {
+        if (this.traceLineStep >= this.traceSingleLineDuration) {
             this.linesToTrace.remove(0);
-            this.traceLineStep = 1;
 
-            FireboerdMod.LOGGER.info("NEW LINE");
+            if ((this.numberOfLinesToTrace - this.linesToTrace.size()) % 2 != 0) {
+                // summon one of the flashing fireballs and draw all the summoned ones once
+                this.activeFlashingFireballPositions.add(this.initialFlashingFireballPositions.get(0));
+                this.initialFlashingFireballPositions.remove(0);
+
+                this.drawFlashingFireballs();
+            }
+
+            this.traceLineStep = 1;
         } else {
             ++this.traceLineStep;
+        }
+    }
+
+    private void drawFlashingFireballs() {
+        for (Vec3d activeFlashingFireballPosition : activeFlashingFireballPositions) {
+            this.drawBall(activeFlashingFireballPosition, ParticleTypes.FLAME);
+        }
+    }
+
+    private void moveFlashingFireballsUpwards() {
+        this.activeFlashingFireballPositions.replaceAll(vec3d -> vec3d.add(
+                0, this.flashingFireballUpwardMovementPerTick, 0
+        ));
+    }
+
+    private void drawFireLinesBetweenFlashingFireballsAndFireboerdCenterPos() {
+        for (Vec3d activeFlashingFireballPosition : this.activeFlashingFireballPositions) {
+            this.drawLine(activeFlashingFireballPosition, this.fireballCenterPos, ParticleTypes.FLAME);
         }
     }
 
@@ -232,39 +311,59 @@ public class FireboerdRitual extends Ritual {
             return;
         }
 
-        if (this.ticks >= this.duration) {
+        if (this.ticks >= this.DURATION) {
             RitualTickHandler.fireboerdRituals.remove(this);
         }
 
         if (this.ticks == 0) {
-            for (Vec3i campfirePosition : campfirePositions) {
-                BlockPos blockPos = this.originBlockPos.add(campfirePosition);
-                BlockState blockState = world.getBlockState(blockPos);
-
-                if (blockState.getBlock() == Blocks.CAMPFIRE && blockState.get(CampfireBlock.LIT)) {
-                    world.syncWorldEvent(null, WorldEvents.FIRE_EXTINGUISHED, blockPos, 0);
-                    CampfireBlock.extinguish(null, world, blockPos, blockState);
-
-                    BlockState updatedBlockState = blockState.with(CampfireBlock.LIT, false);
-                    world.setBlockState(blockPos, updatedBlockState, Block.NOTIFY_ALL | Block.REDRAW_ON_MAIN_THREAD);
-                    world.emitGameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Emitter.of(updatedBlockState));
-                }
-            }
+            this.extinguishCampfires();
+            this.calculateInitialFlashingFireballPositions();
         } else if (this.ticks == 59) {
-            for (int i = 0; i < campfireX.size(); ++i) {
-                Vec3d origin = this.originBlockPos.add(new Vec3i(edgeBLockX.get(i), -1, edgeBLockZ.get(i))).toCenterPos();
-                Vec3d campfire = this.originBlockPos.add(new Vec3i(campfireX.get(i), -1, campfireZ.get(i))).toCenterPos();
-
-                int j = i + 1 < edgeBLockX.size() ? i + 1 : 0;
-                Vec3d target = this.originBlockPos.add(new Vec3i(edgeBLockX.get(j), -1, edgeBLockZ.get(j))).toCenterPos();
-
-                this.linesToTrace.add(this.lineShape.calculateCorrespondingPositions(origin, campfire));
-                this.linesToTrace.add(this.lineShape.calculateCorrespondingPositions(campfire, target));
+            calculatePositionsOnLinesToCampfires();
+            this.tracedAllLinesAtTick = 60 + this.numberOfLinesToTrace * this.traceSingleLineDuration;
+        } else if (60 <= this.ticks && this.ticks <= this.tracedAllLinesAtTick) {
+            this.traceLinesToCampfires(ParticleTypes.FLAME);
+        } else if (60 <= this.ticks && this.ticks == this.tracedAllLinesAtTick + 1) {
+            this.flashingFireballUpwardMovementPerTick = (this.fireballCenterPos.getY() -
+                    this.activeFlashingFireballPositions.get(0).getY()) / (this.DURATION - (2 + this.ticks));
+        } else if (this.tracedAllLinesAtTick + 2 < this.ticks && this.ticks < this.DURATION - 1) {
+            if (this.ticks % this.flashingFireballDrawRate == 0) {
+                this.drawFlashingFireballs();
+                this.drawFireLinesBetweenFlashingFireballsAndFireboerdCenterPos();
             }
 
-            this.traceLinePointsPerStep = Math.round((float) this.linesToTrace.get(0).size() / this.traceLineDuration);
-        } else if (60 <= this.ticks && this.ticks <= 60 + this.linesToTrace.size() * this.traceLineDuration) {
-            this.traceLine(ParticleTypes.FLAME);
+            switch (this.ticks - (this.tracedAllLinesAtTick + 2)) {
+                case 100 -> this.flashingFireballDrawRate = 20;
+                case 200 -> this.flashingFireballDrawRate = 10;
+                case 300 -> this.flashingFireballDrawRate = 5;
+                case 375 -> this.flashingFireballDrawRate = 2;
+                case 400 -> this.flashingFireballDrawRate = 1;
+            }
+
+            this.moveFlashingFireballsUpwards();
+        } else if (this.ticks == this.DURATION - 1) {
+            this.world.createExplosion(
+                    null,
+                    this.originBlockPos.getX(),
+                    this.originBlockPos.getY(),
+                    this.originBlockPos.getZ(),
+                    0.5f,
+                    true,
+                    World.ExplosionSourceType.MOB
+            );
+            this.world.createExplosion(
+                    null,
+                    this.fireballCenterPos.getX(),
+                    this.fireballCenterPos.getY(),
+                    this.fireballCenterPos.getZ(),
+                    0.5f,
+                    true,
+                    World.ExplosionSourceType.MOB
+            );
+
+            FireboerdEntity newFireboerd  = ModEntityTypes.FIREBOERD.create(this.world);
+            newFireboerd.updatePosition(this.position.getX(), this.position.getY(), this.position.getZ());
+            this.world.spawnEntity(newFireboerd);
         }
 
         ++this.ticks;
