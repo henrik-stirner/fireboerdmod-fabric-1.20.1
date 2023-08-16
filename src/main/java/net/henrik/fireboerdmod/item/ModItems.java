@@ -42,6 +42,11 @@ public class ModItems {
             new HomingFireEffect(null, null, 60)
     ));
 
+    /* MISC */
+    public static final Item BLOCK_LAUNCHER = registerItem("block_launcher", new BlockLauncherItem(
+            new FabricItemSettings()
+    ));
+
     /**
      * Add items to the corresponding tab in the creative menu
      */

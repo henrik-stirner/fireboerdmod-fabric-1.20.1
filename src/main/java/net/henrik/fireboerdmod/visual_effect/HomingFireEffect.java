@@ -2,10 +2,13 @@ package net.henrik.fireboerdmod.visual_effect;
 
 import net.henrik.fireboerdmod.handler.tick.VisualEffectTickHandler;
 import net.henrik.fireboerdmod.visual_effect.shape.LineShape;
+import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 
 import java.util.List;
@@ -54,6 +57,41 @@ public class HomingFireEffect extends VisualEffect {
         double z = offset * Math.cos(theta);
 
         return this.position.add(x, y, z);
+    }
+
+    private void launchBlocks(int range, double speed) {
+        BlockPos centerPos = new BlockPos(
+                Math.round((float) this.destinationPoint.getX()),
+                Math.round((float) this.destinationPoint.getY()),
+                Math.round((float) this.destinationPoint.getZ())
+        );
+
+        for (BlockPos blockPos : BlockPos.iterateOutwards(centerPos, range, range, range)) {
+            // would be a cube without this if-statement
+            if (!blockPos.toCenterPos().isInRange(centerPos.toCenterPos(), range)) {
+                // ignore blocks that are not in the sphere of the wanted radius
+                continue;
+            }
+
+            FallingBlockEntity fallingBlockEntity = FallingBlockEntity.spawnFromBlock(
+                    this.world,
+                    blockPos,
+                    this.world.getBlockState(blockPos)
+            );
+
+            Vec3d moveToPos = this.destinationPoint;
+            Vec3d direction = moveToPos.subtract(blockPos.toCenterPos());
+            double magnitude = direction.length();
+            Vec3d velocity = direction.multiply(speed / magnitude);
+
+            Vec3d noise = new Vec3d(
+                    (this.random.nextDouble() - 0.5) * 2 * 0.125,
+                    (this.random.nextDouble() - 0.5) * 2 * 0.125,
+                    (this.random.nextDouble() - 0.5) * 2 * 0.125
+            );
+
+            fallingBlockEntity.setVelocity(velocity.add(noise));
+        }
     }
 
     @Override
@@ -170,6 +208,8 @@ public class HomingFireEffect extends VisualEffect {
                         1
                 );
             }
+
+            this.launchBlocks(3, 0.75);
         }
 
         ++this.ticks;

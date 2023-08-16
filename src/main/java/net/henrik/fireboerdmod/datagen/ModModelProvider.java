@@ -25,5 +25,7 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.register(ModItems.SMOKE_BALL, Models.GENERATED);
         itemModelGenerator.register(ModItems.FIRE_SCANNER, Models.GENERATED);
         itemModelGenerator.register(ModItems.HOMING_FIRE, Models.GENERATED);
+
+        itemModelGenerator.register(ModItems.BLOCK_LAUNCHER, Models.GENERATED);
     }
 }

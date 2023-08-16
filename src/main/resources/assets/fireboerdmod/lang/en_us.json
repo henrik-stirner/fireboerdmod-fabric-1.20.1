@@ -6,6 +6,8 @@
   "item.fireboerdmod.fire_scanner": "Fire Scanner",
   "item.fireboerdmod.homing_fire": "Homing Fire",
 
+  "item.fireboerdmod.block_launcher": "Block Launcher",
+
   "entity.fireboerdmod.errant_fire": "Errant Fire",
   "entity.fireboerdmod.fireboerd": "Fireboerd"
 }
